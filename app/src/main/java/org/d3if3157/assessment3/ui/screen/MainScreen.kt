@@ -3,12 +3,15 @@ package org.d3if3157.assessment3.ui.screen
 import android.content.ContentResolver
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.ImageDecoder
 import android.os.Build
 import android.provider.MediaStore
+import android.util.Base64
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -49,6 +52,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -86,6 +90,7 @@ import org.d3if3157.assessment3.network.ApiStatus
 import org.d3if3157.assessment3.network.GaleriApi
 import org.d3if3157.assessment3.network.UserDataStore
 import org.d3if3157.assessment3.util.SettingsDataStore
+import java.io.ByteArrayOutputStream
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -104,9 +109,13 @@ fun MainScreen(){
     var bitmap: Bitmap? by remember {
         mutableStateOf(null)
     }
+    var stringImage = ""
     val launcher = rememberLauncherForActivityResult(CropImageContract()){
         bitmap = getCroppedImage(context.contentResolver, it)
-        if (bitmap != null) showGaleriDialog = true
+        if (bitmap != null) {
+            showGaleriDialog = true
+            stringImage = bitmapToString(bitmap!!)
+        }
     }
     Scaffold (
         topBar = {
@@ -178,12 +187,12 @@ fun MainScreen(){
                 showDialog = false
             }
         }
-        if (showGaleriDialog){
+        if (showGaleriDialog) {
             GaleriDialog(
                 bitmap = bitmap,
                 onDismissRequest = { showGaleriDialog = false }
-            ){
-                    namaLengkap, deskripsi -> viewModel.postGaleri("",namaLengkap, deskripsi, "", user.email)
+            ) { namaLengkap, deskripsi ->
+                    viewModel.postGaleri("", namaLengkap, deskripsi, stringImage, user.email)
                 showGaleriDialog = false
             }
         }
@@ -267,17 +276,21 @@ fun GridItem(galeri: Galeri, userId: String, userEmail: String){
         ){
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
-                    .data(GaleriApi.getHewanUrl(galeri.imageUrl))
+                    .data(
+                        GaleriApi.getHewanUrl(galeri.imageUrl)
+//                                stringToBitmap(galeri.imageUrl)?.let { Image(bitmap = it.asImageBitmap(), contentDescription = null) }
+
+                    )
                     .crossfade(true)
-                    .build(),
+                    .build()
+                ,
                 contentDescription = stringResource(R.string.gambar, galeri.namaLengkap),
                 contentScale = ContentScale.Crop,
                 placeholder = painterResource(id = R.drawable.loading_img),
                 error = painterResource(id = R.drawable.baseline_broken_image_24),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(4.dp)
-            )
+                    .padding(4.dp))
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -436,3 +449,42 @@ private fun getCroppedImage(
         ImageDecoder.decodeBitmap(source)
     }
 }
+fun stringToBitmap(encodedString: String): Bitmap? {
+    return try {
+        val decodedString = Base64.decode(encodedString, Base64.DEFAULT)
+        BitmapFactory.decodeByteArray(decodedString, 0, decodedString.size)
+    } catch (e: Exception) {
+        e.printStackTrace()
+        null
+    }
+}
+fun bitmapToString(bitmap: Bitmap, format: Bitmap.CompressFormat = Bitmap.CompressFormat.JPEG, quality: Int = 40): String {
+    // Resize the bitmap if necessary
+    val resizedBitmap = resizeBitmap(bitmap, maxWidth = 500, maxHeight = 500)
+
+    return ByteArrayOutputStream().use { byteArrayOutputStream ->
+        resizedBitmap.compress(format, quality, byteArrayOutputStream)
+        val byteArray = byteArrayOutputStream.toByteArray()
+        Base64.encodeToString(byteArray, Base64.NO_WRAP)
+    }
+}
+
+fun resizeBitmap(bitmap: Bitmap, maxWidth: Int, maxHeight: Int): Bitmap {
+    val width = bitmap.width
+    val height = bitmap.height
+
+    val aspectRatio = width.toFloat() / height.toFloat()
+    val newWidth: Int
+    val newHeight: Int
+
+    if (width > height) {
+        newWidth = maxWidth
+        newHeight = (newWidth / aspectRatio).toInt()
+    } else {
+        newHeight = maxHeight
+        newWidth = (newHeight * aspectRatio).toInt()
+    }
+
+    return Bitmap.createScaledBitmap(bitmap, newWidth, newHeight, true)
+}
+

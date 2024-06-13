@@ -43,11 +43,15 @@ class MainViewModel : ViewModel() {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val galeri = Galeri(id, namaLengkap, deskripsi, imageUrl, mine)
-                val result = GaleriApi.service.postGaleri(galeri)
-                retrieveData(id)
+                GaleriApi.service.postGaleri(galeri)
+                retrieveData(mine)
+                Log.d("MainViewModel", "Berhasil")
+
             } catch (e: Exception) {
+                Log.e("MainViewModel", "Error posting galeri", e)
                 errorMessage.value = "Error: ${e.message}"
             }
+
         }
     }
     suspend fun deleteImage(userId: String, id: String) {
@@ -72,21 +76,5 @@ class MainViewModel : ViewModel() {
     }
     fun clearMessage() { errorMessage.value = null}
 
-    fun bitmapToString(bitmap: Bitmap): String {
-        val byteArrayOutputStream = ByteArrayOutputStream()
-        bitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream)
-        val byteArray = byteArrayOutputStream.toByteArray()
-        return Base64.encodeToString(byteArray, Base64.DEFAULT)
-    }
-
-    fun stringToBitmap(encodedString: String): Bitmap? {
-        return try {
-            val decodedString = Base64.decode(encodedString, Base64.DEFAULT)
-            BitmapFactory.decodeByteArray(decodedString, 0, decodedString.size)
-        } catch (e: Exception) {
-            e.printStackTrace()
-            null
-        }
-    }
-
 }
+

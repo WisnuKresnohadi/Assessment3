@@ -1,5 +1,8 @@
 package org.d3if3157.assessment3.network
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.util.Base64
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import okhttp3.OkHttpClient
@@ -35,15 +38,15 @@ private val retrofit = Retrofit.Builder()
     .build()
 
 interface GaleriApiService {
-    @GET("Galeri_Group")
+    @GET("Galeri_group")
     suspend fun getHewan(
         @Header("Authorization") userId: String
     ):List<Galeri>
 
-    @POST("Galeri_Group")
+    @POST("Galeri_group")
     suspend fun postGaleri(@Body galeri: Galeri)
 
-    @DELETE("Galeri_Group/{id}")
+    @DELETE("Galeri_group/{id}")
     suspend fun deleteGaleri(@Path("id") id: String)
 }
 
@@ -52,8 +55,14 @@ object GaleriApi{
         retrofit.create(GaleriApiService::class.java)
     }
 
-    fun getHewanUrl(imageId: String):String{
-        return "${BASE_URL}image.php?id=$imageId"
+    fun getHewanUrl(imageId: String):Bitmap?{
+        return try {
+            val decodedString = Base64.decode(imageId, Base64.DEFAULT)
+            BitmapFactory.decodeByteArray(decodedString, 0, decodedString.size)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
     }
 }
 enum class ApiStatus { LOADING, SUCCESS, FAILED }
