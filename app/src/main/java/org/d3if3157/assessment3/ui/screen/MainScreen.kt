@@ -31,6 +31,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -214,7 +215,7 @@ fun ScreenContent(showList: Boolean, viewModel: MainViewModel, userId: String, m
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ){
-//                CircularProgressIndicator()
+                CircularProgressIndicator()
             }
         }
         ApiStatus.SUCCESS -> {
