@@ -55,7 +55,7 @@ object GaleriApi{
         retrofit.create(GaleriApiService::class.java)
     }
 
-    fun getHewanUrl(imageId: String):Bitmap?{
+    fun getGaleriUrl(imageId: String):Bitmap?{
         return try {
             val decodedString = Base64.decode(imageId, Base64.DEFAULT)
             BitmapFactory.decodeByteArray(decodedString, 0, decodedString.size)
