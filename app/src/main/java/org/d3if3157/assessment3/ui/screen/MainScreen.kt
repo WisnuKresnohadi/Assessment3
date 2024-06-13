@@ -215,7 +215,7 @@ fun ScreenContent(showList: Boolean, viewModel: MainViewModel, userId: String, m
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ){
-                CircularProgressIndicator()
+                CircularProgressIndicator(progress = 1f)
             }
         }
         ApiStatus.SUCCESS -> {
